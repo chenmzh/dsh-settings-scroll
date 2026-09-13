@@ -1,0 +1,49 @@
+{
+  "name": "dsh-settings-scroll",
+  "version": "0.1.0",
+  "description": "Independent scrolling and keyboard navigation for the DSH Web settings sidebar.",
+  "type": "module",
+  "license": "MIT",
+  "author": "chenmzh",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chenmzh/dsh-settings-scroll.git"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "engines": {
+      "dsh": ">=0.1.5-rc.1"
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/*.test.mjs",
+    "test:browser": "node scripts/test-browser.mjs",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}
