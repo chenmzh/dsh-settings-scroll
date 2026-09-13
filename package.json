@@ -1,6 +1,6 @@
 {
   "name": "dsh-settings-scroll",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Independent scrolling and keyboard navigation for the DSH Web settings sidebar.",
   "type": "module",
   "license": "MIT",

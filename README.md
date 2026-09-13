@@ -57,3 +57,7 @@ See [validation notes](docs/validation.md) for the tested host version and limit
 ## License
 
 MIT.
+
+### Performance
+
+Conversation DOM mutations are filtered before scheduling work. Only modal mounts/unmounts and changes within the settings navigation schedule a scan, coalesced to one animation frame. Navigation observers and pending frames are released on unload.

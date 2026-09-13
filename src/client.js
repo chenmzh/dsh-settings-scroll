@@ -2,6 +2,7 @@ export const name = 'settings-scroll';
 
 const NAV = 'data-dsh-settings-scroll-nav';
 const LIST = 'data-dsh-settings-scroll-list';
+const DIALOG = '[role="dialog"][aria-modal="true"]';
 const STYLE_ID = 'dsh-settings-scroll-style';
 const STYLE = `
 [${NAV}] {
@@ -26,7 +27,7 @@ const STYLE = `
 /** Match the official settings shell without depending on CSS hash prefixes. */
 export function findSettingsLists(doc) {
   const matches = [];
-  for (const dialog of doc.querySelectorAll('[role="dialog"][aria-modal="true"]')) {
+  for (const dialog of doc.querySelectorAll(DIALOG)) {
     for (const nav of dialog.children) {
       if (nav.tagName !== 'NAV') continue;
       const [title, list] = nav.children;
@@ -58,10 +59,13 @@ export function install(doc = document) {
   doc.head.append(style);
   const mounted = new Map();
   let disposed = false;
-  let pending = false;
+  let pending = null;
+  const schedule = () => {
+    if (!disposed && pending === null) pending = doc.defaultView.requestAnimationFrame(sync);
+  };
 
   const sync = () => {
-    pending = false;
+    pending = null;
     if (disposed) return;
     const current = new Set();
     for (const { nav, list } of findSettingsLists(doc)) {
@@ -94,9 +98,12 @@ export function install(doc = document) {
         };
         list.addEventListener('focusin', focus);
         list.addEventListener('keydown', key);
+        const navigationObserver = new doc.defaultView.MutationObserver(schedule);
+        navigationObserver.observe(nav, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-current'] });
         mounted.set(list, {
           active: null,
           cleanup() {
+            navigationObserver.disconnect();
             list.removeEventListener('focusin', focus);
             list.removeEventListener('keydown', key);
             oldNav === null ? nav.removeAttribute(NAV) : nav.setAttribute(NAV, oldNav);
@@ -118,17 +125,26 @@ export function install(doc = document) {
       }
     }
   };
-  const observer = new doc.defaultView.MutationObserver(() => {
-    if (!pending) {
-      pending = true;
-      queueMicrotask(sync);
+  // The page observer only discovers modal mount/unmount. Conversation token
+  // updates never schedule a document scan. An open nav owns its own observer.
+  const hasDialog = node => node.nodeType === 1 && (node.matches(DIALOG) || node.querySelector(DIALOG));
+  const observer = new doc.defaultView.MutationObserver(records => {
+    for (const record of records) {
+      const target = record.target;
+      const shellChanged = target.nodeType === 1 && (target.matches(DIALOG) ||
+        (target.tagName === 'NAV' && target.parentElement?.matches(DIALOG)));
+      if (shellChanged || [...record.addedNodes, ...record.removedNodes].some(hasDialog)) {
+        schedule();
+        break;
+      }
     }
   });
-  observer.observe(doc.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-current'] });
+  observer.observe(doc.body, { childList: true, subtree: true });
   sync();
   return () => {
     disposed = true;
     observer.disconnect();
+    if (pending !== null) doc.defaultView.cancelAnimationFrame(pending);
     for (const state of mounted.values()) state.cleanup();
     mounted.clear();
     style.remove();

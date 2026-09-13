@@ -1,4 +1,4 @@
-# Validation: v0.1.0
+# Validation: v0.1.1
 
 Validated on 2026-09-13 with DSH `0.1.5-rc.2`, the official Web settings shell, and headless Google Chrome on Linux.
 
@@ -27,3 +27,7 @@ The narrow-viewport check covers navigation reachability, not a redesign of the 
 ## Design note
 
 Use a bounded flex child with `min-height: 0`, native `overflow-y: auto`, and non-shrinking buttons. The title remains outside the scroll area. Hash-independent matching is restricted to the official labelled modal navigation with a `*_navList` class. A Cordis-owned effect handles dynamic dialog mounts and cleans up on unload. Focus reveal adjusts only the navigation's scroll position. No core files, persistent settings, or network services are changed by the plugin.
+
+## v0.1.1 regression checks
+
+The real DSH desktop, narrow viewport, keyboard and reopen checks passed again. A Chromium regression fixture also verified zero document settings scans across 30 conversation DOM mutations both with settings closed and open; dynamically added buttons, removal/reinsertion, and disposal with a pending frame passed. `npm test` runs this fixture and the package loader check.
